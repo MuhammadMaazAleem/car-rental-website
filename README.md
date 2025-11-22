@@ -257,3 +257,4 @@ Developed for Swat Car Rental Business
 4. Set up proper backup strategies for the database
 5. Configure proper file upload limits and validation
 6. Implement rate limiting for API endpoints
+# car-rental-website
