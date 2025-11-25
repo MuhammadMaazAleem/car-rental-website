@@ -13,7 +13,7 @@ cd ..
 # Install client dependencies and build
 echo "Installing client dependencies..."
 cd client
-npm install
+npm install --include=dev
 echo "Building client..."
 npm run build
 cd ..
