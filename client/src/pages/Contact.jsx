@@ -80,7 +80,7 @@ const Contact = () => {
                   <FaPhone className="text-primary text-xl" />
                   <div>
                     <p className="font-semibold">Phone</p>
-                    <p className="text-gray-600">+92 328 8691013</p>
+                    <p className="text-gray-600">03288691013</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -166,7 +166,7 @@ const Contact = () => {
                       onChange={handleChange}
                       required
                       className="input-field"
-                      placeholder="+92 328 8691013"
+                      placeholder="03288691013"
                     />
                   </div>
                   <div>
