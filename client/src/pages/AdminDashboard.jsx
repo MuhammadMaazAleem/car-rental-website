@@ -215,7 +215,13 @@ const AdminDashboard = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">All Cars</h2>
-                <button className="btn-primary flex items-center space-x-2">
+                <button 
+                  onClick={() => {
+                    setEditingCar(null)
+                    setShowCarModal(true)
+                  }}
+                  className="btn-primary flex items-center space-x-2"
+                >
                   <FaPlus />
                   <span>Add New Car</span>
                 </button>
@@ -237,7 +243,13 @@ const AdminDashboard = () => {
                         <p className="text-gray-600 mb-2">{car.brand} {car.model}</p>
                         <p className="text-primary font-bold mb-4">Rs {car.pricePerDay}/day</p>
                         <div className="flex gap-2">
-                          <button className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1">
+                          <button 
+                            onClick={() => {
+                              setEditingCar(car)
+                              setShowCarModal(true)
+                            }}
+                            className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"
+                          >
                             <FaEdit />
                             <span>Edit</span>
                           </button>
@@ -257,6 +269,273 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Car Form Modal */}
+      {showCarModal && (
+        <CarFormModal
+          car={editingCar}
+          onClose={() => {
+            setShowCarModal(false)
+            setEditingCar(null)
+          }}
+          onSuccess={() => {
+            setShowCarModal(false)
+            setEditingCar(null)
+            fetchData()
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// Car Form Modal Component
+const CarFormModal = ({ car, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: car?.name || '',
+    brand: car?.brand || '',
+    model: car?.model || '',
+    year: car?.year || new Date().getFullYear(),
+    category: car?.category || 'sedan',
+    transmission: car?.transmission || 'manual',
+    fuelType: car?.fuelType || 'petrol',
+    seats: car?.seats || 5,
+    pricePerDay: car?.pricePerDay || 0,
+    features: car?.features?.join(', ') || '',
+    description: car?.description || '',
+    available: car?.available !== undefined ? car.available : true
+  })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    try {
+      const carData = {
+        ...formData,
+        features: formData.features.split(',').map(f => f.trim()).filter(f => f)
+      }
+
+      if (car?._id) {
+        await updateCar(car._id, carData)
+        toast.success('Car updated successfully')
+      } else {
+        await createCar(carData)
+        toast.success('Car created successfully')
+      }
+      
+      onSuccess()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save car')
+    }
+  }
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">{car ? 'Edit Car' : 'Add New Car'}</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Car Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="e.g., Toyota Corolla"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
+                <input
+                  type="text"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="e.g., Toyota"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Model *</label>
+                <input
+                  type="text"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="e.g., Corolla"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+                <input
+                  type="number"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                  required
+                  min="1990"
+                  max={new Date().getFullYear() + 1}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="sedan">Sedan</option>
+                  <option value="suv">SUV</option>
+                  <option value="luxury">Luxury</option>
+                  <option value="sports">Sports</option>
+                  <option value="van">Van</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Transmission *</label>
+                <select
+                  name="transmission"
+                  value={formData.transmission}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="manual">Manual</option>
+                  <option value="automatic">Automatic</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Type *</label>
+                <select
+                  name="fuelType"
+                  value={formData.fuelType}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="petrol">Petrol</option>
+                  <option value="diesel">Diesel</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="electric">Electric</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Seats *</label>
+                <input
+                  type="number"
+                  name="seats"
+                  value={formData.seats}
+                  onChange={handleChange}
+                  required
+                  min="2"
+                  max="12"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price Per Day (Rs) *</label>
+                <input
+                  type="number"
+                  name="pricePerDay"
+                  value={formData.pricePerDay}
+                  onChange={handleChange}
+                  required
+                  min="0"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="e.g., 5000"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="available"
+                    checked={formData.available}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Available for Rent</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Features (comma separated)</label>
+              <input
+                type="text"
+                name="features"
+                value={formData.features}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="e.g., AC, GPS, Bluetooth, USB Port"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Describe the car..."
+              />
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 btn-primary"
+              >
+                {car ? 'Update Car' : 'Add Car'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
