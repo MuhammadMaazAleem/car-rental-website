@@ -26,6 +26,7 @@ const Booking = () => {
 
   useEffect(() => {
     fetchCarDetails()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const fetchCarDetails = async () => {
@@ -63,24 +64,55 @@ const Booking = () => {
       return
     }
 
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.token) {
+      toast.error('Please login to make a booking');
+      navigate('/login');
+      return;
+    }
+
     setSubmitting(true)
 
     try {
+      console.log('Creating booking with data:', {
+        car: id,
+        ...bookingData
+      });
+      
       const response = await createBooking({
         car: id,
         ...bookingData
       })
       
-      const booking = response.data
+      console.log('Booking response:', response);
+      
+      // Backend returns { success: true, data: booking }
+      // bookingService returns response.data, so we get { success, data }
+      const booking = response.data || response
+      
+      console.log('Booking object:', booking);
+      
+      if (!booking || !booking._id) {
+        console.error('Invalid booking structure:', booking);
+        throw new Error('Invalid booking response');
+      }
       
       // If payment method is not Cash on Delivery, redirect to payment page
       if (bookingData.paymentMethod !== 'Cash on Delivery') {
         toast.success('Booking created! Redirecting to payment...')
+        // Convert payment method to lowercase for payment page
+        const paymentMethodMap = {
+          'JazzCash': 'jazzcash',
+          'EasyPaisa': 'easypaisa',
+          'Bank Transfer': 'bank'
+        };
         navigate('/payment', {
           state: {
             bookingId: booking._id,
             totalAmount: calculateTotalPrice(),
-            carName: car.name
+            carName: car.name,
+            paymentMethod: paymentMethodMap[bookingData.paymentMethod]
           }
         })
       } else {
@@ -88,7 +120,9 @@ const Booking = () => {
         navigate('/dashboard')
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Booking failed')
+      console.error('Booking error:', error);
+      console.error('Error response:', error.response);
+      toast.error(error.response?.data?.message || error.message || 'Booking failed')
     } finally {
       setSubmitting(false)
     }
@@ -201,62 +235,63 @@ const Booking = () => {
               </div>
 
               {/* Step 4: Payment */}
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">4. Payment Method</h2>
-                <div className="space-y-3">
-                  {[
-                    { value: 'JazzCash', label: 'JazzCash', icon: '📱', desc: 'Instant mobile payment' },
-                    { value: 'EasyPaisa', label: 'EasyPaisa', icon: '💚', desc: 'Quick digital payment' },
-                    { value: 'Bank Transfer', label: 'Bank Transfer', icon: '🏦', desc: 'Direct bank transfer' },
-                    { value: 'Cash on Delivery', label: 'Cash on Delivery', icon: '💵', desc: 'Pay when you pick up' }
-                  ].map((method) => (
-                    <label 
-                      key={method.value} 
-                      className={`flex items-center space-x-3 cursor-pointer p-4 border-2 rounded-xl transition-all ${
-                        bookingData.paymentMethod === method.value 
-                          ? 'border-teal-500 bg-teal-50' 
-                          : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={method.value}
-                        checked={bookingData.paymentMethod === method.value}
-                        onChange={(e) => setBookingData({ ...bookingData, paymentMethod: e.target.value })}
-                        className="w-5 h-5 text-teal-600"
-                      />
-                      <div className="flex-1 flex items-center">
-                        <span className="text-2xl mr-3">{method.icon}</span>
-                        <div>
-                          <div className="font-semibold text-gray-800">{method.label}</div>
-                          <div className="text-sm text-gray-600">{method.desc}</div>
-                        </div>
+                      <div className="mb-8">
+                      <h2 className="text-2xl font-bold mb-4">4. Payment Method</h2>
+                      <div className="space-y-3">
+                        {[
+                        { value: 'JazzCash', label: 'JazzCash', icon: '📱', desc: 'Instant mobile payment' },
+                        { value: 'EasyPaisa', label: 'EasyPaisa', icon: '💚', desc: 'Quick digital payment' },
+                        { value: 'Bank Transfer', label: 'Bank Transfer', icon: '🏦', desc: 'Direct bank transfer' },
+                        { value: 'Cash on Delivery', label: 'Cash on Delivery', icon: '💵', desc: 'Pay when you pick up' }
+                        ].map((method) => (
+                        <label 
+                          key={method.value} 
+                          className={`flex items-center space-x-3 cursor-pointer p-4 border-2 rounded-xl transition-all ${
+                          bookingData.paymentMethod === method.value 
+                            ? 'border-teal-500 bg-teal-50' 
+                            : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={method.value}
+                          checked={bookingData.paymentMethod === method.value}
+                          onChange={(e) => setBookingData({ ...bookingData, paymentMethod: e.target.value })}
+                          className="w-5 h-5 text-teal-600"
+                          required
+                          />
+                          <div className="flex-1 flex items-center">
+                          <span className="text-2xl mr-3">{method.icon}</span>
+                          <div>
+                            <div className="font-semibold text-gray-800">{method.label}</div>
+                            <div className="text-sm text-gray-600">{method.desc}</div>
+                          </div>
+                          </div>
+                          {bookingData.paymentMethod === method.value && (
+                          <svg className="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                          </svg>
+                          )}
+                        </label>
+                        ))}
                       </div>
-                      {bookingData.paymentMethod === method.value && (
-                        <svg className="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                        </svg>
+                      {bookingData.paymentMethod !== 'Cash on Delivery' && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          ℹ️ You'll be redirected to complete payment after confirming booking
+                        </p>
+                        </div>
                       )}
-                    </label>
-                  ))}
-                </div>
-                {bookingData.paymentMethod !== 'Cash on Delivery' && (
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      ℹ️ You'll be redirected to complete payment after confirming booking
-                    </p>
-                  </div>
-                )}
-              </div>
+                      </div>
 
-              <button
-                type="submit"
-                disabled={submitting || !bookingData.pickupDate || !bookingData.returnDate}
-                className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
-              >
-                {submitting ? 'Processing...' : bookingData.paymentMethod === 'Cash on Delivery' ? 'Confirm Booking' : 'Proceed to Payment'}
-              </button>
+                      <button
+                      type="submit"
+                      disabled={submitting || !bookingData.pickupDate || !bookingData.returnDate}
+                      className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+                      >
+                      {submitting ? 'Processing...' : bookingData.paymentMethod === 'Cash on Delivery' ? 'Confirm Booking' : 'Proceed to Payment'}
+                      </button>
             </form>
           </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import API from '../services/api';
 import { toast } from 'react-toastify';
@@ -6,12 +6,20 @@ import { toast } from 'react-toastify';
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId, totalAmount } = location.state || {};
+  const { bookingId, totalAmount, paymentMethod: preselectedMethod } = location.state || {};
   
-  const [selectedMethod, setSelectedMethod] = useState('');
+  const [selectedMethod, setSelectedMethod] = useState(preselectedMethod || '');
   const [loading, setLoading] = useState(false);
   const [bankDetails, setBankDetails] = useState(null);
   const [receiptImage, setReceiptImage] = useState('');
+
+  // Check if booking data exists
+  useEffect(() => {
+    if (!bookingId || !totalAmount) {
+      toast.error('Invalid payment session. Please create a booking first.');
+      navigate('/cars');
+    }
+  }, [bookingId, totalAmount, navigate]);
 
   const paymentMethods = [
     {

@@ -78,6 +78,8 @@ export const createBooking = async (req, res) => {
 // @access  Private
 export const getBookings = async (req, res) => {
   try {
+    console.log('Getting bookings for user:', req.user._id, 'Role:', req.user.role);
+    
     let query = {};
 
     // If not admin, only show user's bookings
@@ -90,10 +92,14 @@ export const getBookings = async (req, res) => {
       query.status = req.query.status;
     }
 
+    console.log('Query:', query);
+
     const bookings = await Booking.find(query)
       .populate('car', 'name brand model images pricePerDay category')
       .populate('user', 'name email phone')
       .sort({ createdAt: -1 });
+
+    console.log('Found bookings:', bookings.length);
 
     res.json({
       success: true,
