@@ -1,0 +1,19 @@
+{
+  "name": "car-rental-website",
+  "version": "1.0.0",
+  "description": "Swat Car Rental Website - Full Stack Application",
+  "scripts": {
+    "install-server": "cd server && npm install",
+    "install-client": "cd client && npm install",
+    "build": "npm run install-server && npm run install-client && cd client && npm run build",
+    "start": "cd server && node server.js",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": ["car-rental", "nodejs", "react", "mongodb"],
+  "author": "Muhammad Maaz Aleem",
+  "license": "MIT"
+}
