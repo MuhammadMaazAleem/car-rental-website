@@ -217,8 +217,10 @@ const AdminDashboard = () => {
                 <h2 className="text-2xl font-bold">All Cars</h2>
                 <button 
                   onClick={() => {
+                    console.log('Add New Car clicked!')
                     setEditingCar(null)
                     setShowCarModal(true)
+                    console.log('showCarModal set to true')
                   }}
                   className="btn-primary flex items-center space-x-2"
                 >

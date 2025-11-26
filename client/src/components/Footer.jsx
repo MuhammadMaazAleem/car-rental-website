@@ -61,7 +61,13 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3">
                 <FaPhone className="text-secondary" />
-                <span className="text-gray-400">+92 328 8691013</span>
+                <span className="text-gray-400">03288691013</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <a href="https://wa.me/923288691013" className="text-gray-400 hover:text-secondary transition flex items-center">
+                  <FaWhatsapp className="text-secondary" />
+                  <span className="ml-2">WhatsApp</span>
+                </a>
               </li>
               <li className="flex items-center space-x-3">
                 <FaEnvelope className="text-secondary" />
