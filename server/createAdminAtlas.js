@@ -1,21 +1,18 @@
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import User from './models/User.js';
 
-dotenv.config();
+// MongoDB Atlas connection string - replace with your actual connection string
+const ATLAS_URI = 'mongodb+srv://maazswati51:HKMLcCqK1RYZWJl1@cluster0.bk2xg.mongodb.net/swat-car-rental?retryWrites=true&w=majority';
 
 const createAdmin = async () => {
   try {
-    console.log('Connecting to MongoDB...');
-    console.log('URI:', process.env.MONGO_URI?.substring(0, 20) + '...');
+    console.log('Connecting to MongoDB Atlas...');
     
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    await mongoose.connect(ATLAS_URI, {
       serverSelectionTimeoutMS: 10000
     });
 
-    console.log('✅ MongoDB Connected');
+    console.log('✅ MongoDB Atlas Connected');
 
     const adminEmail = 'admin@swatcarrental.com';
     
@@ -23,12 +20,11 @@ const createAdmin = async () => {
     const existingAdmin = await User.findOne({ email: adminEmail });
     
     if (existingAdmin) {
-      console.log('\n✅ Admin user already exists!');
+      console.log('\n✅ Admin user already exists in MongoDB Atlas!');
       console.log('\nAdmin Login Credentials:');
       console.log('Email:', adminEmail);
       console.log('Password: admin123');
       console.log('Role:', existingAdmin.role);
-      console.log('\nNote: If you forgot the password, delete this admin and run the script again.');
       await mongoose.connection.close();
       process.exit(0);
     }
@@ -43,12 +39,12 @@ const createAdmin = async () => {
       role: 'admin'
     });
 
-    console.log('\n✅ Admin user created successfully!');
+    console.log('\n✅ Admin user created successfully in MongoDB Atlas!');
     console.log('\nAdmin Login Credentials:');
     console.log('Email:', admin.email);
     console.log('Password: admin123');
     console.log('Role:', admin.role);
-    console.log('\nYou can now login with these credentials.');
+    console.log('\n🚀 You can now login on your Azure deployed site!');
 
     await mongoose.connection.close();
     process.exit(0);
@@ -56,8 +52,9 @@ const createAdmin = async () => {
     console.error('\n❌ Error:', error.message);
     console.error('\nPlease check:');
     console.error('1. Your internet connection');
-    console.error('2. MongoDB Atlas IP whitelist settings');
-    console.error('3. MongoDB Atlas connection string in .env file');
+    console.error('2. MongoDB Atlas IP whitelist (add 0.0.0.0/0 to allow all IPs)');
+    console.error('3. MongoDB Atlas username and password are correct');
+    await mongoose.connection.close();
     process.exit(1);
   }
 };

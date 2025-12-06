@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "data:import": "node seeder.js",
     "data:destroy": "node seeder.js -d",
-    "create:admin": "node createAdmin.js"
+    "create:admin": "node createAdmin.js",
+    "create:admin:atlas": "node createAdminAtlas.js"
   },
   "keywords": [
     "car-rental",
